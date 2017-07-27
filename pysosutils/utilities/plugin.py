@@ -5,6 +5,7 @@ from pysosutils.utilities.color import Colors as c
 from operator import itemgetter
 from collections import OrderedDict
 
+
 class Plugin():
 
     def __init__(self, target, args):
@@ -27,7 +28,7 @@ class Plugin():
             t.verbose = verbose
             for i in dir(t):
                 result = getattr(t, i)
-                if self.parse_failed == False:
+                if self.parse_failed is False:
                     if i.startswith('run_') and hasattr(result, '__call__'):
                         result()
                 else:
@@ -67,7 +68,8 @@ class Plugin():
     def get_runlevel(self):
         ''' Get the _current_ runlevel '''
         return self.file_to_string(self.target +
-                                       'sos_commands/startup/runlevel')
+                                   'sos_commands/startup/runlevel'
+                                   )
 
     def get_release(self):
         ''' Get the OS release '''
@@ -75,13 +77,16 @@ class Plugin():
 
     def get_kernel(self):
         ''' Get the booted kernel version '''
-        uname = self.file_to_string(self.target + 'sos_commands/kernel/uname_-a')
+        uname = self.file_to_string(self.target +
+                                    'sos_commands/kernel/uname_-a'
+                                    )
         return uname.split()[2]
 
     def get_hostname(self):
         ''' Get the hostname of the system '''
         return self.file_to_string(self.target +
-                                'sos_commands/general/hostname')
+                                   'sos_commands/general/hostname'
+                                   )
 
     def get_sos_date(self):
         ''' Get time of when sosreport was run '''
@@ -100,20 +105,24 @@ class Plugin():
             days = up_string[0:up_string.find('day')].strip().strip(',')
             uptime += days + ' days'
             hours = up_string[up_string.find('day') + 4:
-                             up_string.find(':')].strip().strip(',')
+                              up_string.find(':')].strip().strip(',')
             uptime += hours + ' hours'
             minutes = up_string[up_string.find(':') + 1:
-                               len(up_string)].strip()
+                                len(up_string)].strip()
             uptime += ' ' + minutes + ' minutes'
         return uptime
 
     def get_uname(self):
         ''' Get contents of uname_-a '''
-        return self.file_to_string(self.target + 'sos_commands/kernel/uname_-a')
+        return self.file_to_string(self.target +
+                                   'sos_commands/kernel/uname_-a'
+                                   )
 
     def get_load_avg(self):
         ''' Get reported loadavg at time of sosreport '''
-        uptime = self.file_to_string(self.target + 'sos_commands/general/uptime')
+        uptime = self.file_to_string(self.target +
+                                     'sos_commands/general/uptime'
+                                     )
         index = uptime.find('e:')
         loads = uptime[index + 2:len(uptime)].split(',')
         return loads
@@ -121,7 +130,8 @@ class Plugin():
     def get_sysctl(self, sysctl):
         ''' Get the value of a specific sysctl'''
         if os.path.isfile(self.target + 'sos_commands/kernel/sysctl_-a'):
-            with open(self.target + 'sos_commands/kernel/sysctl_-a', 'r') as sfile:
+            with open(self.target +
+                      'sos_commands/kernel/sysctl_-a', 'r') as sfile:
                 for line in sfile:
                     if line.startswith(sysctl):
                         return line.split()[2]
@@ -186,7 +196,6 @@ class Plugin():
     def get_rpm(self, rpm, match_all=False):
         '''
         Get details on a given rpm.
-    
         Boolean option can be used to see if rpm is installed or not.
         '''
         rpms = []
@@ -205,7 +214,7 @@ class Plugin():
                             this_rpm = line[0:index - 2]
                             rpms.append(line.split()[0])
         if len(rpms) == 0:
-                rpms.append("Not Installed")
+            rpms.append("Not Installed")
         return rpms
 
     def get_all_packages(self):
@@ -281,9 +290,10 @@ class Plugin():
             for nic in niclist:
                 n = {}
                 for i in [
-                    'inet',
-                    'inet6',
-                    'link/ether']:
+                          'inet',
+                          'inet6',
+                          'link/ether'
+                          ]:
                     try:
                         n[i] = re.split(i, nic)[1].split()[0]
                     except:
@@ -295,7 +305,6 @@ class Plugin():
     def get_enablement(self, service):
         '''
         Check the current service configuration from chkconfig.
-    
         TO DO: expand to systemd.
         '''
         if os.path.isfile(self.target + 'chkconfig'):
@@ -303,12 +312,12 @@ class Plugin():
                 for line in cfile:
                     if service in line:
                         service_status = line.lstrip(service).rstrip(
-                            '\n').lstrip()
+                                                     '\n').lstrip()
                         return service_status
             return "Service not found in chkconfig"
         else:
             return "No chkconfig file found"
-    
+
     def get_selinux(self):
         ''' Get the current and configured SELinux setting '''
         sel_status = {}
@@ -319,17 +328,17 @@ class Plugin():
                     index = line.find(':')
                     if line.startswith('SELinux status'):
                         sel_status['status'] = line[index + 1:
-                                                   len(line)].strip()
+                                                    len(line)].strip()
                         if sel_status['status'] == 'disabled':
                             sel_status['current'] = 'disabled'
                             sel_status['config'] = 'disabled'
                             break
                     elif line.startswith('Current'):
                         sel_status['current'] = line[index + 1:
-                                                    len(line)].strip()
+                                                     len(line)].strip()
                     elif line.startswith('Mode'):
                         sel_status['config'] = line[index + 1:
-                                                   len(line)].strip()
+                                                    len(line)].strip()
                     elif i > 6:
                         break
         else:
@@ -346,7 +355,7 @@ class Plugin():
         if os.path.isfile(self.target + fname):
             with open(self.target + fname, 'r') as pfile:
                 handle_regex = re.compile('^%s\s' % start)
-                newline = re.compile('^%s'% end)
+                newline = re.compile('^%s' % end)
                 lines = pfile.readlines()
                 for x in range(0, len(lines)):
                     line = lines[x]
@@ -359,8 +368,9 @@ class Plugin():
                                 line = lines[x + 1]
                         # repeat until we hit newline
                                 if not newline.findall(line):
-                                    sectionInfo['info'].append(line.strip(
-                                    ).strip('\t'))
+                                    sectionInfo['info'].append(
+                                                line.strip().strip('\t')
+                                                )
                                     x += 1
                                 else:
                                     break
@@ -381,16 +391,15 @@ class Plugin():
         else:
             return False
 
-
     def format_as_table(self, data, keys, header=None, sort_by_key=None,
                         sort_order_reverse=False):
         '''Takes a list of dictionaries, formats the data, and returns
         the formatted data as a text table.
-    
+
         Required Parameters:
             data - Data to process (list of dictionaries). (Type: List)
             keys - List of keys in the dictionary. (Type: List)
-    
+
         Optional Parameters:
             header - The table header. (Type: List)
             sort_by_key - The key to sort by. (Type: String)
@@ -443,15 +452,18 @@ class Plugin():
             pass
         return formatted_data
 
-    def display_table(self, tbl, count=0, color=None, indent='', no_header=False):
+    def display_table(self, tbl, count=0, color=None, indent='',
+                      no_header=False):
         if count > 0:
-            count +=2
+            count += 2
         header = tbl.splitlines()[:2]
         if not no_header:
             for x in header:
                 if color:
                     if color in self.color:
-                        print indent + self.color[color] + x.strip() + self.color['ENDC']
+                        print (indent + self.color[color] + x.strip() +
+                               self.color['ENDC']
+                               )
                     else:
                         print indent + x.strip()
                 else:
@@ -481,7 +493,7 @@ class Plugin():
         t['32768'] = "The kernel has been live patched"
         t['16384'] = "A soft lockup has previously occurred on the system."
         t['8192'] = ("An unsigned module has been loaded in a kernel"
-                    " supporting module signature")
+                     " supporting module signature")
         t['4096'] = "Out-of-tree module has been loaded"
         t['2048'] = "Working around severe firmware bug"
         t['1024'] = "Modules from drivers/staging are loaded"
@@ -509,37 +521,50 @@ class Plugin():
             else:
                 pass
         # we should only hit this if we have an undefined taint code
-        taint_codes.append("Undefined taint code: %s" % self._get_taints() )
+        taint_codes.append("Undefined taint code: %s" % self._get_taints())
         return taint_codes
 
     def print_header_values(self, info, headers=None, key=None):
         ''' Takes info as a dict, and then prints each item in a standard
-        fashion of 'key : value'. 
-        
+        fashion of 'key : value'.
+
         Optionally, supply headers as a list to only print those keys
         '''
         if headers is None:
             for i in info:
                 if not isinstance(info[i], dict):
-                    self.pprint.bheader('\t{:20s} : '.format(i.title()), info[i])
+                    self.pprint.bheader('\t{:20s} : '.format(i.title()),
+                                        info[i]
+                                        )
                 else:
-                    self.pprint.bheader('\t{:20s} : '.format(i.title()), info[i][key])
+                    self.pprint.bheader('\t{:20s} : '.format(i.title()),
+                                        info[i][key]
+                                        )
         else:
             for i in info:
                 if i in headers:
                     if isinstance(info[i], list):
                         if len(info[i]) == 1:
-                            self.pprint.bheader('\t{:20s} : '.format(i.title()), info[i][0])
+                            self.pprint.bheader('\t{:20s} : '.format(
+                                                i.title()), info[i][0]
+                                                )
                         else:
-                            self.pprint.bheader('\t{:20s} : '.format(i.title()), info[i][0])
+                            self.pprint.bheader('\t{:20s} : '.format(
+                                                i.title()), info[i][0]
+                                                )
                             info[i].pop(0)
-                            for l in  info[i]:
-                                self.pprint.bheader('\t{:20s} : '.format(' '), l)
+                            for l in info[i]:
+                                self.pprint.bheader('\t{:20s} : '.format(
+                                                    ' '), l
+                                                    )
                     elif isinstance(info[i], dict):
-                        self.pprint.bheader('\t{:20s} : '.format(i.title()), info[i][key])
+                        self.pprint.bheader('\t{:20s} : '.format(
+                                            i.title()), info[i][key]
+                                            )
                     else:
-                        self.pprint.bheader('\t{:20s} : '.format(i.title()), str(info[i]))
-
+                        self.pprint.bheader('\t{:20s} : '.format(
+                                            i.title()), str(info[i])
+                                            )
 
     def parse_output_section(self, fname, section):
         """
