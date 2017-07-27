@@ -1,4 +1,4 @@
-class Color:
+class Colors:
 
     def __init__(self):
         self.colors = {}
@@ -35,5 +35,5 @@ class Color:
                 color = name
             if not args:
                 return
-            print(self.fmt(self.colors[color.upper()], args))
+            print self.fmt(self.colors[color.upper()], args)
         return trapit

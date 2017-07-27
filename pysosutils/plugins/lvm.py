@@ -1,5 +1,56 @@
 import os
-from .colors import Color as c
+from pysosutils.utilities.plugin import Plugin
+
+
+class lvm(Plugin):
+
+    def parse(self):
+        self.keys = ['name', 'size', 'path', 'status', 'uuid']
+        self.header = ['Name', 'Size', 'Path', 'Status', 'UUID']
+        df = self.target + 'sos_commands/devicemapper/vgdisplay_-vv'
+        lf = self.target + ('sos_commands/lvm2/'
+                            'vgdisplay_-vv_--config_global_locking_type_0'
+                            )
+        if os.path.isfile(df):
+            self.lvfile = df
+        elif os.path.isfile(lf):
+            self.lvfile = lf
+        self.display_lvm_data()
+
+    def get_lvm_data(self):
+        try:
+            data = [l.strip() for l in open(self.lvfile).readlines()
+                    if l.strip() and (l.strip().startswith('---') or
+                                      l.strip().startswith('VG') or
+                                      l.strip().startswith('LV') or
+                                      l.strip().startswith('PV'))]
+            vgs = []
+            for x in [i for i in '+++'.join(data).split(
+                    '--- Volume group ---') if i]:
+                vg = VolumeGroup(x.split('+++'))
+                vgs.append(vg)
+        except IOError:
+            vgs = False
+            self.pprint.bred(
+                '\tCould not find %s. Unable to parse' % self.lvfile
+            )
+        return vgs
+
+    def display_lvm_data(self):
+        data = self.get_lvm_data()
+        self.pprint.bsection('Disk and LVM Information\n')
+        if data:
+            for vg in data:
+                self.pprint.bheader('\t VG Name: ', vg.name)
+                data = [lv.__dict__ for lv in vg.lvs]
+                tbl = self.format_as_table(data, self.keys,
+                                           self.header, 'name'
+                                           )
+                self.display_table(tbl, color='WHITE', indent='\t\t')
+                print '\n'
+
+        else:
+            self.pprint.bred('\t Could not parse LVM information')
 
 
 class VolumeGroup:
@@ -17,7 +68,6 @@ class VolumeGroup:
         self.getvgdata(vglvdata)
         self.lvs = self.getlvs(vglvdata)
         self.pvs = self.getpvs(pvdata)
-        self.pprint = c()
 
     def getvgdata(self, vglvdata):
         self.vgdata = [
@@ -73,6 +123,7 @@ class VolumeGroup:
 class LogicalVolume:
 
     def __init__(self, lvdict):
+        self.path = ''
         for k, v in lvdict.items():
             self.__dict__[k] = v
 
@@ -82,65 +133,3 @@ class PhysicalVolume:
     def __init__(self, pvdict):
         for k, v in pvdict.items():
             self.__dict__[k] = v
-
-
-class lvm:
-
-    def __init__(self, target):
-        if os.path.isfile(
-                target + 'sos_commands/devicemapper/vgdisplay_-vv'
-                ):
-            self.target = target + 'sos_commands/devicemapper/vgdisplay_-vv'
-        elif os.path.isfile(
-                target + 'sos_commands/lvm2/vgdisplay_-vv_--config_global_locking_type_0'
-                ):
-                self.target = target + 'sos_commands/lvm2/vgdisplay_-vv_--config_global_locking_type_0'
-        self.pprint = c()
-
-    def getLvmInfo(self):
-        try:
-            data = [l.strip() for l in open(self.target).readlines()
-                    if l.strip() and (l.strip().startswith('---') or
-                                      l.strip().startswith('VG') or
-                                      l.strip().startswith('LV') or
-                                      l.strip().startswith('PV'))]
-            vgs = []
-            for x in [i for i in '+++'.join(data).split(
-                    '--- Volume group ---') if i]:
-                vg = VolumeGroup(x.split('+++'))
-                vgs.append(vg)
-        except IOError:
-            vgs = False
-            self.pprint.bred(
-                '\tCould not find %s. Unable to parse' % self.target
-            )
-        return vgs
-
-    def displayVgInfo(self):
-        self.pprint.bsection('Disk and LVM Information')
-        print('')
-        vgs = self.getLvmInfo()
-        if vgs:
-            if len(vgs) > 0:
-                for vg in vgs:
-                    self.pprint.bheader('\t VG Name:  ', vg.name)
-                    print('')
-                    self.pprint.white(
-                        '\t\t {:^15} {:^12}'.format(
-                            'LV NAME',
-                            'SIZE'
-                        )
-                    )
-                    for lv in vg.lvs:
-                        print('\t\t  {:^15} {:>12}'.format(lv.name, lv.size))
-                    print('')
-                    print('\t\t  PVs in this VG: ' + ' '.join(
-                        pv.name for pv in vg.pvs))
-
-if __name__ == '__main__':
-    for vg in vgs:
-        print("VG %s:" % vg.name)
-        for lv in vg.lvs:
-            print("\tLV %s (%s)" % (lv.name, lv.size))
-        for pv in vg.pvs:
-            print("\tPV %s" % pv.name)
