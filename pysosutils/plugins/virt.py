@@ -26,6 +26,7 @@ class virt(Plugin):
         if not hasattr(self, 'platform'):
             self.platform = self.determine_platform()
 
+        packages = []
         vpackages = []
 
         if self.platform == 'rhev':
@@ -58,9 +59,7 @@ class virt(Plugin):
     def is_spm(self):
         f = 'sos_commands/vdsm/vdsClient_-s_0_getAllTasksStatuses'
         spm = self.file_to_string(self.target + f)
-        if 'Not SPM' in spm:
-            return False
-        return True
+        return spm or False
 
     def get_platform_info(self):
         if not hasattr(self, 'platform'):

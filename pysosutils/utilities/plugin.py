@@ -26,7 +26,7 @@ class Plugin():
             with open(filepath, 'r') as f:
                 return f.readline().strip('\n')
         except IOError:
-            return 'Not Found'
+            return ''
 
     def file_to_dict(self, filepath):
         '''For multi-line files, each line becomes a dict entry with the
@@ -59,7 +59,9 @@ class Plugin():
         uname = self.file_to_string(self.target +
                                     'sos_commands/kernel/uname_-a'
                                     )
-        return uname.split()[2]
+        if uname:
+            return uname.split()[2]
+        return False
 
     def get_hostname(self):
         ''' Get the hostname of the system '''
@@ -75,7 +77,7 @@ class Plugin():
         ''' Get and format system uptime into a readable string '''
         uptime = ''
         u = self.file_to_string(self.target + 'sos_commands/general/uptime')
-        if 'not found' in u:
+        if not u:
             return u
         up_string = u[u.find('up') + 2:u.find('user') - 3].strip().strip(',')
         if 'min' in up_string:
