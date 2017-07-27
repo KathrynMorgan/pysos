@@ -18,27 +18,6 @@ class Plugin():
         self.color = colors.colors
         self.parse_failed = False
 
-    def runtests(self, verbose):
-        '''Runs all tests in a plugin. Methods must start with run_
-
-        If a test should be run even if a plugin's parse() fails, then
-        pass run_if_failed=True to the test method'''
-        try:
-            t = self.tests(self.target)
-            t.verbose = verbose
-            for i in dir(t):
-                result = getattr(t, i)
-                if self.parse_failed is False:
-                    if i.startswith('run_') and hasattr(result, '__call__'):
-                        result()
-                else:
-                    if i.startswith('run_') and hasattr(result, '__call__'):
-                        if 'run_if_failed' in result.func_code.co_varnames:
-                            result()
-            t.report_tests()
-        except:
-            pass
-
     def file_to_string(self, filepath):
         '''For single line files, read the file in and return
         contents as a string.
