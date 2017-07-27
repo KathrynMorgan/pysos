@@ -5,15 +5,12 @@ from pysosutils.utilities.plugin import Plugin
 
 class dockertests(SosTests, Plugin):
 
-    enabled_for = ['docker']
-
-    def setup(self):
-        pass
+    packages = ['docker']
+    enabled_for = ('containers',)
 
     def run_storage_driver(self):
         try:
-            with open(self.target +
-                'sos_commands/docker/docker_info') as s:
+            with open(self.target + 'sos_commands/docker/docker_info') as s:
                 if 'loopback' in s.readlines():
                     self.warn('Loopback storage in use. Should use LVM')
                 else:

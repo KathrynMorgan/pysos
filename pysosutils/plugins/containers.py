@@ -142,8 +142,12 @@ class containers(Plugin):
         info = self.get_docker_info()
         if info:
             self.pprint.section('  Docker')
-            header = ['installed', 'daemon', 'image count', 'running']
+            # do this twice to maintain order
+            header = ['installed', 'daemon']
             self.print_header_values(info, headers=header)
+            header = ['image count', 'running']
+            self.print_header_values(info, headers=header)
+            print '\n'
             if info['containers']:
                 self.display_running_containers(info['containers'])
         else:
@@ -180,26 +184,3 @@ class containers(Plugin):
         if info:
             self.pprint.section('  Kubernetes')
             self.pprint.bheader('\t Installed', '\n\t\t %s' % info['version'])
-
-
-    class tests(SosTests):
-
-
-        def run_storage_driver(self):
-            try:
-                with open(self.target +
-                    'sos_commands/docker/docker_info') as s:
-                    if 'loopback' in s.readlines():
-                        self.warn('Loopback storage in use. Should use LVM')
-                    else:
-                        self.succeed()
-            except IOError:
-                pass
-
-        def run_package_version(self, run_if_failed=True):
-            rpms = self.get_rpm('docker')
-            upstream_list = ['docker-engine', 'centos', 'docker-io']
-            if any(substr in r for substr in upstream_list for r in rpms):
-                self.fail('Upstream packages are installed.')
-            else:
-                self.succeed()
