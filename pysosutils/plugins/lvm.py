@@ -57,11 +57,11 @@ class VolumeGroup:
 
     def __init__(self, rawdata):
         self.rawdata = rawdata
-        self.name = None
-        self.access = None
-        self.status = None
-        self.size = None
-        self.status = None
+        self.name = ''
+        self.access = ''
+        self.status = ''
+        self.size = ''
+        self.status = ''
         vglvdata, pvdata = [x.split(
             '+++') for x in '+++'.join(self.rawdata).split(
                                             '--- Physical volumes ---')]
@@ -124,6 +124,7 @@ class LogicalVolume:
 
     def __init__(self, lvdict):
         self.path = ''
+        self.status = ''
         for k, v in lvdict.items():
             self.__dict__[k] = v
 
