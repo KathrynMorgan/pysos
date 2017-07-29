@@ -20,6 +20,7 @@ class virt(Plugin):
 
         if self.is_installed('qemu-kvm'):
             return 'kvm'
+        return ''
 
     def get_virt_packages(self):
         """Based on the virt platform, return what packages in use"""
@@ -36,7 +37,7 @@ class virt(Plugin):
 
         if self.platform == 'rhevm':
             packages = ['rhevm']
-            if self.is_hosted_engine():
+            if self.is_hosted_engine:
                 packages.append('ovirt-hosted-engine-ha')
 
         if self.platform == 'kvm':
@@ -65,7 +66,6 @@ class virt(Plugin):
         if not hasattr(self, 'platform'):
             self.packages = self.get_virt_packages()
         info = {}
-
         info['kernel'] = self.get_kernel()
         info['release'] = self.get_release()
 
@@ -73,7 +73,7 @@ class virt(Plugin):
             info['vms'] = self.get_running_vms()
 
         if self.platform == 'rhevm':
-            self.get_rhevm_info()
+            pass
 
         return info
 
@@ -114,7 +114,8 @@ class virt(Plugin):
                            no_header=True
                            )
 
-        self.display_rhev_hyper_info()
+        if self.platform == 'rhev':
+            self.display_rhev_hyper_info()
 
         if 'vms' in self.info:
             self.pprint.bheader('\n\tRunning VMs : \n')
