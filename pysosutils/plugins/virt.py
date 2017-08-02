@@ -1,5 +1,8 @@
+import os
+
 from processes import processes
 from pysosutils.utilities.plugin import Plugin
+from pysosutils.utilities.rhevdatabase import Database
 
 
 class virt(Plugin):
@@ -9,6 +12,8 @@ class virt(Plugin):
         self.packages = self.get_virt_packages()
         self.info = self.get_platform_info()
         self.display_platform_info()
+        if self.options['db']:
+            self.display_db_info()
 
     def determine_platform(self):
         """Used to see what virt platform the sosreport is from"""
@@ -36,7 +41,7 @@ class virt(Plugin):
 
         if self.platform == 'rhevm':
             packages = ['rhevm']
-            if self.is_hosted_engine():
+            if self.is_hosted_engine:
                 packages.append('ovirt-hosted-engine-ha')
 
         if self.platform == 'kvm':
@@ -91,7 +96,22 @@ class virt(Plugin):
         return vms
 
     def get_rhevm_info(self):
-        pass
+        if self.options['db']:
+            db_file = self.find_db_file()
+            if db_file:
+                self.db = self.get_database(db_file)
+
+    def get_database(self, db_file):
+        ver = self.get_rpm_version('rhevm').split('-')[0].split('.', 2)[:2]
+        simple_ver = '.'.join(ver)
+        return Database(db_file, simple_ver)
+
+    def find_db_file(self):
+        for root, dirs, files in os.walk(self.target + '..'):
+            for f in files:
+                if f == 'sos_pgdump.tar':
+                    return os.path.join(root, f)
+        return False
 
     def display_rhev_hyper_info(self):
         self.pprint.white('\n\t{:20s} : '.format('Is SPM'), '%s' % self.is_spm)
@@ -122,3 +142,36 @@ class virt(Plugin):
             header = ['Name', 'Memory (MB)', 'CPU (%)']
             tbl = self.format_as_table(self.info['vms'], keys, header, 'name')
             self.display_table(tbl, color='WHITE', indent='\t\t\t\t')
+
+    def display_db_info(self):
+        self.data_centers_keys = ['name', 'status', 'compat', 'spm']
+        self.data_centers_header = ['Name', 'Status', 'Compat', 'SPM']
+
+        self.clusters_keys = ['name', 'datacenter', 'compat']
+        self.clusters_header = ['Name', 'Datacenter', 'Compat']
+
+        self.hypervisors_keys = [
+                                 'name', 'cluster', 'ip_addr', 'host_name',
+                                 'host_os', 'vdsm_version'
+                                 ]
+        self.hypervisors_header = [
+                                   'Name', 'Cluster', 'IP Addr', 'Hostname',
+                                   'Host OS', 'VDSM Version'
+                                   ]
+
+        self.storage_domains_keys = ['name', 'storage_type', 'status',
+                                     'dc_uuid'
+                                     ]
+        self.storage_domains_header = ['Name', 'Type', 'Status', 'Datacenter']
+
+        for ent in ['data_centers', 'clusters', 'hypervisors',
+                    'storage_domains']:
+            self.pprint.bheader('\t{} Report'.format(
+                                ent.replace('_', ' ').title())
+                                )
+            keys = getattr(self, ent + '_keys')
+            header = getattr(self, ent + '_header')
+            t = getattr(self.db, ent)
+            tbl = self.format_as_table(t, keys, header, 'name')
+            self.display_table(tbl, color='BBLUE', indent='\t\t')
+            print ''
