@@ -48,13 +48,13 @@ parser.add_argument('-o', "--opsys", action="store_true",
                     help="Print OS information")
 parser.add_argument('-p', "--processes", action="store_true",
                     help="Print process information")
-#parser.add_argument("--db", action="store_true",
-#                    help="Print RHEV DB information, must be run with -v")
 parser.add_argument('-s', "--sysctl", action="store_true",
                     help="Print common sysctl settings")
 parser.add_argument('-t', "--tests", action="store_true", help="Run plugin tests")
 parser.add_argument('-v', "--virt", action="store_true",
                     help="Print virtualization information")
+parser.add_argument("--db", action="store_true",
+                    help="Print RHEV DB information, must be run with -v")
 parser.add_argument("--vnet", action="store_true",
                     help="Also display vnet interfaces in network output")
 parser.add_argument("--verbose", action="store_true",
