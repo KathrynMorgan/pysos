@@ -1,4 +1,3 @@
-
 import tarfile
 import os
 
@@ -28,6 +27,8 @@ class Database():
                          'clusters': 'vds_groups',
                          'hypervisor_dynamic': 'vds_dynamic'
                          }
+        if float(self.version) >= 4:
+            self._mapping['clusters'] = 'cluster'
         self.dat_files = {}
         for entity in self._mapping:
             self.dat_files[entity] = self.find_dat(self._mapping[entity])
@@ -36,7 +37,7 @@ class Database():
         '''This is what actually finds the dat file for a specific table'''
         with open(self.db_dir + 'restore.sql') as rfile:
             for line in rfile:
-                if line.startswith('copy'):
+                if line.lower().startswith('copy'):
                     try:
                         if line.split()[1] == table:
                             dat_idx = line.find("PATH")
