@@ -19,8 +19,8 @@ class dockertests(SosTests, Plugin):
             pass
 
     def run_package_version(self, run_if_failed=True):
-        rpms = self.get_rpm('docker')
-        upstream_list = ['docker-engine', 'centos', 'docker-io']
+        rpms = self.get_rpm('docker', match_all=True)
+        upstream_list = ['docker-engine', 'centos', 'docker-io', 'docker-ce']
         if any(substr in r for substr in upstream_list for r in rpms):
             self.fail('Upstream packages are installed.')
         else:
