@@ -8,12 +8,11 @@ from pysosutils.utilities.rhevdatabase import Database
 class virt(Plugin):
 
     def parse(self):
+        self.db = False
         self.platform = self.determine_platform()
         self.packages = self.get_virt_packages()
         self.info = self.get_platform_info()
         self.display_platform_info()
-        if self.options['db']:
-            self.display_db_info()
 
     def determine_platform(self):
         """Used to see what virt platform the sosreport is from"""
@@ -78,7 +77,7 @@ class virt(Plugin):
             info['vms'] = self.get_running_vms()
 
         if self.platform == 'rhevm':
-            pass
+            self.get_rhevm_info()
 
         return info
 
@@ -143,6 +142,10 @@ class virt(Plugin):
             header = ['Name', 'Memory (MB)', 'CPU (%)']
             tbl = self.format_as_table(self.info['vms'], keys, header, 'name')
             self.display_table(tbl, color='WHITE', indent='\t\t\t\t')
+
+        if self.options['db'] and self.db:
+            self.display_db_info()
+
 
     def display_db_info(self):
         self.data_centers_keys = ['name', 'status', 'compat', 'spm']
