@@ -67,13 +67,13 @@ class Database():
             c = cluster(clus, self.version)
             self.clusters.append(c)
         for host in self._hypervisors:
-            hyp = hypervisor(host)
+            hyp = hypervisor(host, self.version)
             self.hypervisors.append(hyp)
         for host in self._hypervisor_dynamic:
             hyp = hyperdynamic(host, self.version)
             self.hypervisor_dynamic.append(hyp)
         for stor in self._storage_domains:
-            sd = storagedomain(stor, self.version)
+            sd = storagedomain(stor)
             self.storage_domains.append(sd)
 
     def link_values(self):
@@ -100,6 +100,7 @@ class hyperdynamic(dict):
 
     schema = {'3.1': {
                       'uuid': 0,
+                      'status': 1,
                       "vdsm_version": 39,
                       "host_os": 27,
                       "kvm_ver": 28,
@@ -108,6 +109,7 @@ class hyperdynamic(dict):
                       },
               '3.2': {
                       'uuid': 0,
+                      'status': 1,
                       "host_os": 25,
                       "kvm_ver": 26,
                       "spice_ver": 27,
@@ -116,6 +118,7 @@ class hyperdynamic(dict):
                       },
               '3.3': {
                       'uuid': 0,
+                      'status': 1,
                       "vdsm_version": 38,
                       "host_os": 26,
                       "kvm_ver": 27,
@@ -124,46 +127,93 @@ class hyperdynamic(dict):
                       },
               '3.4': {
                       'uuid': 0,
+                      'status': 1,
                       "vdsm_version": 36,
                       "host_os": 25,
                       "kvm_ver": 26,
                       "spice_ver": 27,
                       "kernel_version": 28
+                      },
+              '3.5': {
+                      'uuid': 0,
+                      'status': 1,
+                      'vdsm_version': 34,
+                      'host_os': 25,
+                      'kvm_ver': 26,
+                      'spice_ver': 27,
+                      'kernel_version': 28
+                      },
+              '3.6': {
+                      'uuid': 0,
+                      'status': 1,
+                      'vdsm_version': 34,
+                      'host_os': 24,
+                      'kvm_ver': 25,
+                      'spice_ver': 26,
+                      'kernel_version': 27,
+                      },
+              '4.0': {
+                      'uuid': 0,
+                      'status': 1,
+                      'host_os': 24,
+                      'kvm_ver': 25,
+                      'spice_ver': 26,
+                      'kernel_vesion': 27,
+                      'vdsm_version': 34
                       }
               }
 
-    def __init__(self, hyp_string, ver):
-        for key in self.schema[ver]:
+    def __init__(self, hyp_string, version):
+        if float(version) > 4:
+            version = '4.0'
+        for key in self.schema[version]:
             try:
-                val = hyp_string[self.schema[ver][key]]
+                val = hyp_string[self.schema[version][key]]
                 if val == "\N":
                     val = ''
-                self[key] = hyp_string[self.schema[ver][key]].strip(' ')
+                self[key] = hyp_string[self.schema[version][key]].strip(' ')
             except:
                 pass
 
 
 class hypervisor(dict):
 
-    schema = {
-              "uuid": 0,
-              "name": 1,
-              "ip_addr": 2,
-              "host_name": 4,
-              "host_cluster_uuid": 6,
-              "host_type": 8,
+    schema = {'3.0': {
+                      "uuid": 0,
+                      "name": 1,
+                      "host_name": 4,
+                      "host_cluster_uuid": 6,
+                      "host_type": 8,
+                      },
+              '3.6': {
+                      'uuid': 0,
+                      'name': 1,
+                      'host_name': 3,
+                      'host_cluster_uuid': 5,
+                      'host_type': 7
+                      },
+              '4.0': {
+                      'uuid': 0,
+                      'name': 1,
+                      'host_name': 3,
+                      'host_cluster_uuid': 5,
+                      'host_type': 7
+                      }
               }
 
-    def __init__(self, hyp_string):
+    def __init__(self, hyp_string, version):
         '''Based on the ver provided, break hyp_string into a dict'''
-        self['ip_addr'] = ''
         self['datacenter'] = ''
-        for key in self.schema:
+        if float(version) > 2 and float(version) < 3.6:
+            version = '3.0'
+        if float(version) > 4:
+            version = '4.0'
+        for key in self.schema[version]:
             try:
-                val = hyp_string[self.schema[key]]
+                val = hyp_string[self.schema[version][key]].strip()
                 if val == "\\N":
                     val = ''
-                self[key] = hyp_string[self.schema[key]]
+                self[key] = val
             except:
                 pass
 
@@ -201,11 +251,11 @@ class datacenter(dict):
 
 class storagedomain(dict):
 
-    schema = {'3.2': {
-                     'uuid': 0,
-                     'name': 2,
-                     'storage_type': 4,
-                     }
+    schema = {
+              'uuid': 0,
+              'name': 2,
+              'storage_type': 4,
+              'domain_type': 3
               }
 
     stype = {
@@ -220,12 +270,20 @@ class storagedomain(dict):
              '8': 'Glance'
              }
 
-    def __init__(self, sd_string, ver):
+    dtype = {
+             '0': 'Data(master)',
+             '1': 'Data',
+             '2': 'ISO',
+             '3': 'Export',
+             '4': 'Unknown'
+             }
+
+    def __init__(self, sd_string):
         self['status'] = ''
         self['dc_uuid'] = ''
-        for key in self.schema[ver]:
+        for key in self.schema:
             try:
-                self[key] = sd_string[self.schema[ver][key]]
+                self[key] = sd_string[self.schema[key]]
             except:
                 pass
 
@@ -233,20 +291,40 @@ class storagedomain(dict):
             if self['storage_type'] == stat:
                 self['storage_type'] = self.stype[stat]
 
+        for stat in self.dtype:
+            if self['domain_type'] == stat:
+                self['domain_type'] = self.dtype[stat]
+
 
 class cluster(dict):
 
-    schema = {'3.2': {
+    schema = {'3.0': {
                       'uuid': 0,
                       'name': 1,
                       'dc_uuid': 10,
                       'compat': 12
+                      },
+              '3.6': {
+                      'uuid': 0,
+                      'name': 1,
+                      'dc_uuid': 6,
+                      'compat': 8
+                      },
+              '4.0': {
+                      'uuid': 0,
+                      'name': 1,
+                      'dc_uuid': 6,
+                      'compat': 8
                       }
               }
 
-    def __init__(self, clus_string, ver):
-        for key in self.schema[ver]:
+    def __init__(self, clus_string, version):
+        if float(version) > 2 and float(version) < 3.6:
+            version = '3.0'
+        if float(version) > 4:
+            version = '4.0'
+        for key in self.schema[version]:
             try:
-                self[key] = clus_string[self.schema[ver][key]]
+                self[key] = clus_string[self.schema[version][key]]
             except:
                 pass

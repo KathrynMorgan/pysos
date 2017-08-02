@@ -151,18 +151,16 @@ class virt(Plugin):
         self.clusters_header = ['Name', 'Datacenter', 'Compat']
 
         self.hypervisors_keys = [
-                                 'name', 'cluster', 'ip_addr', 'host_name',
-                                 'host_os', 'vdsm_version'
+                                 'name', 'cluster', 'host_name', 'host_os',
+                                 'vdsm_version'
                                  ]
         self.hypervisors_header = [
-                                   'Name', 'Cluster', 'IP Addr', 'Hostname',
-                                   'Host OS', 'VDSM Version'
+                                   'Name', 'Cluster', 'Hostname', 'Host OS',
+                                   'VDSM Version'
                                    ]
 
-        self.storage_domains_keys = ['name', 'storage_type', 'status',
-                                     'dc_uuid'
-                                     ]
-        self.storage_domains_header = ['Name', 'Type', 'Status', 'Datacenter']
+        self.storage_domains_keys = ['name', 'storage_type', 'domain_type']
+        self.storage_domains_header = ['Name', 'Storage Type', 'Domain Type']
 
         for ent in ['data_centers', 'clusters', 'hypervisors',
                     'storage_domains']:
