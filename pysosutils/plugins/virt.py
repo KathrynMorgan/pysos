@@ -146,7 +146,6 @@ class virt(Plugin):
         if self.options['db'] and self.db:
             self.display_db_info()
 
-
     def display_db_info(self):
         self.data_centers_keys = ['name', 'status', 'compat', 'spm']
         self.data_centers_header = ['Name', 'Status', 'Compat', 'SPM']
