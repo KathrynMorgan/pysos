@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
       name='pysos',
-      version='2.0.1',
+      version='2.0.2',
       description='Parse a sosreport for specific information',
       long_description=('Pysos is a tool to parse through a sosreport and'
                         'report back desired information in a structured'
