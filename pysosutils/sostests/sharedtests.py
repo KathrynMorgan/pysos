@@ -16,3 +16,17 @@ class sharedtests(SosTests, Plugin):
             self.succeed()
         else:
             self.fail('Not a RHEL kernel: %s' % kernel)
+
+    def run_rhel_release(self):
+        rel = self.get_release()
+        if 'Red Hat' in rel:
+            self.succeed()
+        else:
+            self.fail('A non-RHEL OS is installed')
+
+    def run_selinux_state(self):
+        state = self.get_selinux()
+        if state['config'] is not 'disabled':
+            self.succeed()
+        else:
+            self.warn('SELinux is disabled')
