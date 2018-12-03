@@ -1,0 +1,14 @@
+name: pysos # you probably want to 'snapcraft register <name>'
+version: '1' # just for humans, typically '1.2+git' or '1.3.2'
+summary: Pysos is a python utility to quickly parse through a gathered sosreport  # 79 char long summary
+description: |
+  Pysos is a python utility to quickly parse through a sosreport and 
+  present relevant information quickly and in a more digestible format
+  than reading the raw data.
+
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+parts:
+  pysos:
+    plugin: python
